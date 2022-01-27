@@ -1,11 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "1F9N9YfU7LUM2bkAAU8p30ZO7vvOh/iLTvO4ZRiRNNmVIDoQVSWJYfQwPwtADK04QvJUx1/N+KKkOa/B7SBjvA==",
+  "dgSpecHash": "hC2h9qnzDYNqU8EfN96r/dyH4NqqjwYhcOHzAdtTH07SAnR2jOfG5pVEALyTDOGl6epkwaAetlmVwNxGCzRC0g==",
   "success": true,
-  "projectFilePath": "C:\\Users\\Administrator\\source\\repos\\FfmpegPOC\\FfmpegPOC\\FfmpegPOC.csproj",
+  "projectFilePath": "C:\\Users\\Kodiks\\Desktop\\FfmpegPOC\\FfmpegPOC\\FfmpegPOC.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\Administrator\\.nuget\\packages\\hangfire.core\\1.7.27\\hangfire.core.1.7.27.nupkg.sha512",
-    "C:\\Users\\Administrator\\.nuget\\packages\\newtonsoft.json\\11.0.1\\newtonsoft.json.11.0.1.nupkg.sha512"
+    "C:\\Users\\Kodiks\\.nuget\\packages\\hangfire.core\\1.7.27\\hangfire.core.1.7.27.nupkg.sha512",
+    "C:\\Users\\Kodiks\\.nuget\\packages\\newtonsoft.json\\11.0.1\\newtonsoft.json.11.0.1.nupkg.sha512"
   ],
   "logs": []
 }
