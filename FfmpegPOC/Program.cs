@@ -50,9 +50,8 @@ namespace FfmpegPOC
         private static void LiveScenario(string videoId, string wPath, bool isVideoCut)
         {
             Console.WriteLine("Merhaba Live");
-
             string link = '"' + "https://www.youtube.com/watch?v=" + videoId + '"';
-            string streamLinkCmd = "/C streamlink " + link + " --stream-url";
+            string streamLinkCmd = "/C streamlink " + link + " --default-stream 360p,240p,best --stream-url";
             string streamLink = string.Empty;
             DirectoryInfo directory;
             var path = wPath + "/" + videoId;
