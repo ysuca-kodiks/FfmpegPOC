@@ -38,9 +38,9 @@ namespace FfmpegPOC
             Console.ReadLine();
         }
 
-        public static void OnExited(object sender,EventArgs e)
+        public static void OnExited(object sender, EventArgs e)
         {
-            
+
         }
         public static void OnDisposed(object sender, EventArgs e)
         {
@@ -54,8 +54,8 @@ namespace FfmpegPOC
             string streamLinkCmd = "/C streamlink " + link + " --default-stream 360p,240p,best --stream-url";
             string streamLink = string.Empty;
             DirectoryInfo directory;
-            var path = wPath + "/" + videoId;
-            
+            var path = wPath + "/" + videoId + "-" + DateTime.Now.ToString("MM-dd-yyyy-HH-mm-ss");
+
             Console.WriteLine(streamLinkCmd);
             var streamLinkStartInfo = new ProcessStartInfo
             {
@@ -82,7 +82,7 @@ namespace FfmpegPOC
 
             Console.WriteLine(ffmpegCmd);
 
-            
+
             if (!Directory.Exists(path))
                 directory = Directory.CreateDirectory(path);
 
