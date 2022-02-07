@@ -6,67 +6,57 @@ using System.Threading.Tasks;
 using System.Threading;
 using Hangfire;
 using System.Linq;
+using System.Text;
 
 namespace FfmpegPOC
 {
     class Program
     {
         public static Process ffmpegProcess;
+        public static string lPath = Path.Combine(Directory.GetCurrentDirectory(), "records");
         static void Main(string[] args)
         {
-
-            string wPath = @"C:\ffmpeg\records";
-            string lPath = Path.Combine(Directory.GetCurrentDirectory(), "records");
-
             Console.WriteLine("VideoId giriniz");
             string videoId = Console.ReadLine();
 
             Console.WriteLine("IsLive Y/N");
             string isLive = Console.ReadLine();
-
+            if (!string.IsNullOrEmpty(videoId) && !string.IsNullOrEmpty(isLive))
+                SetStartInfo(videoId, isLive);
+            Console.ReadLine();
+        }
+        public static void SetStartInfo(string videoId, string isLive)
+        {
+            var path = lPath + "/" + videoId + "-" + DateTime.Now.ToString("MM-dd-yyyy-HH-mm-ss");
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+            ProcessStartInfo _processStartInfo = new ProcessStartInfo();
+            _processStartInfo.WorkingDirectory = path;
+            _processStartInfo.FileName = (isLive == "y" ? "cmd.exe" : @"youtube-dl.exe");
+            _processStartInfo.UseShellExecute = false;
+            _processStartInfo.RedirectStandardOutput = true;
             switch (isLive)
             {
                 case "y":
-
-                    LiveScenario(videoId, wPath, true);
+                    string link = '"' + "https://www.youtube.com/watch?v=" + videoId + '"';
+                    _processStartInfo.Arguments = "/C streamlink " + link + " --default-stream 360p,240p,best --stream-url";
+                    LiveScenario(_processStartInfo, true);
                     break;
 
                 default:
-                    OfflineScenario(videoId);
+                    _processStartInfo.RedirectStandardInput = true;
+                    _processStartInfo.CreateNoWindow = true;
+                    _processStartInfo.Arguments = @"-f bestvideo[height<=480,ext=mp4]+bestaudio[ext=m4a] http://www.youtube.com/watch?v=" + videoId;
+                    _processStartInfo.RedirectStandardError = true;
+                    OfflineScenario(_processStartInfo);
                     break;
             }
-            Console.ReadLine();
         }
-
-        public static void OnExited(object sender, EventArgs e)
-        {
-
-        }
-        public static void OnDisposed(object sender, EventArgs e)
-        {
-
-        }
-
-        private static void LiveScenario(string videoId, string wPath, bool isVideoCut)
+        private static void LiveScenario(ProcessStartInfo startInfo, bool isVideoCut)
         {
             Console.WriteLine("Merhaba Live");
-            string link = '"' + "https://www.youtube.com/watch?v=" + videoId + '"';
-            string streamLinkCmd = "/C streamlink " + link + " --default-stream 360p,240p,best --stream-url";
             string streamLink = string.Empty;
-            DirectoryInfo directory;
-            var path = wPath + "/" + videoId + "-" + DateTime.Now.ToString("MM-dd-yyyy-HH-mm-ss");
-
-            Console.WriteLine(streamLinkCmd);
-            var streamLinkStartInfo = new ProcessStartInfo
-            {
-                //FileName = "/usr/local/bin/streamlink",
-                FileName = "cmd.exe",
-                Arguments = streamLinkCmd,
-                UseShellExecute = false,
-                RedirectStandardOutput = true
-            };
-
-            using (var process = new Process { StartInfo = streamLinkStartInfo })
+            using (var process = new Process { StartInfo = startInfo })
             {
                 process.Start();
                 StreamReader streamReader = process.StandardOutput;
@@ -74,42 +64,21 @@ namespace FfmpegPOC
                 process.WaitForExit();
                 process.Dispose();
             }
-
             string ffmpegCmd = "ffmpeg -y -i " + '"' + streamLink.TrimEnd() + '"' + " -hls_time 9 -hls_segment_filename " + '"' + "index-%d.ts" + '"' + " -hls_playlist_type vod index.m3u8";
-
             if (isVideoCut)
                 ffmpegCmd += " -t 120";
-
             Console.WriteLine(ffmpegCmd);
-
-
-            if (!Directory.Exists(path))
-                directory = Directory.CreateDirectory(path);
-
-            var ffmpegStartInfo = new ProcessStartInfo
-            {
-                //FileName = "/bin/bash",
-                FileName = "cmd.exe",
-                Arguments = @"/C " + ffmpegCmd,
-                WorkingDirectory = path,
-                UseShellExecute = false
-            };
-
+            startInfo.Arguments = @"/C " + ffmpegCmd;
+            startInfo.UseShellExecute = false;
             try
             {
-                using (ffmpegProcess = new Process { StartInfo = ffmpegStartInfo })
+                using (ffmpegProcess = new Process { StartInfo = startInfo })
                 {
-                    ffmpegProcess.Exited += OnExited;
-                    ffmpegProcess.Disposed += OnDisposed;
                     var firstDt = DateTime.Now;
-
                     ffmpegProcess.Start();
-                    Console.WriteLine("ProcessorName: " + ffmpegProcess.ProcessName);
-
-
                     var timer = new System.Threading.Timer((e) =>
                     {
-                        DirectoryInfo info = new DirectoryInfo(wPath);
+                        DirectoryInfo info = new DirectoryInfo(lPath);
                         FileInfo file = info.GetFiles().Where(x => x.FullName.Contains(".ts")).OrderByDescending(p => p.CreationTime).FirstOrDefault();
                         if (file != null)
                         {
@@ -123,10 +92,7 @@ namespace FfmpegPOC
                         }
 
                     }, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
-
                     ffmpegProcess.WaitForExit();
-
-
                     if (ffmpegProcess.HasExited)
                     {
                         Console.WriteLine("StartTime: " + ffmpegProcess.StartTime);
@@ -140,10 +106,19 @@ namespace FfmpegPOC
                 Environment.Exit(0);
             }
         }
-        // TODO:@ucaselimyavuz 
-        private static void OfflineScenario(string videoId) { }
-        private static void CheckLiveVideo()
+        private static void OfflineScenario(ProcessStartInfo processStartInfo)
         {
+            Process myProcess = new Process();
+            StringBuilder errorBuilder = new StringBuilder();
+
+            myProcess.ErrorDataReceived += delegate (object sender, DataReceivedEventArgs e)
+            {
+                errorBuilder.Append(e.Data);
+            };
+            myProcess.StartInfo = processStartInfo;
+            myProcess.Start();
+            myProcess.BeginErrorReadLine();
+            myProcess.WaitForExit();
 
         }
     }
